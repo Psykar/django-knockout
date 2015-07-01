@@ -5,12 +5,15 @@ def get_fields(fields, obj):
             fld, name = fld
         else:
             name = fld
-        links = fld.split('__')
-        val = obj
-        for lnk in links:
-            val = getattr(val, lnk)
-            if callable(val):
-                val = val()
+        if callable(fld):
+            val = fld(obj)
+        else:
+            links = fld.split('__')
+            val = obj
+            for lnk in links:
+                val = getattr(val, lnk)
+                if callable(val):
+                    val = val()
         obs_dict[name] = val
     return obs_dict
 
