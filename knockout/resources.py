@@ -23,12 +23,22 @@ class Resource(object):
         self.queryset = queryset
 
     def eval(self):
+
+        # Were we given something?
         objs = getattr(self, 'queryset', None)
         if objs is None:
             objs = self.model.objects.all()
-        values = objs.values(*getattr(self, 'fields', []))
-        extras = getattr(self, 'extras', None)
-        if extras:
-            for o, v in zip(objs, values):
-                v.update(get_fields(extras, o))
+
+        # Is it a queryset, or an object?
+        if not isinstance(objs, self.model):
+            values = objs.values(*getattr(self, 'fields', []))
+            extras = getattr(self, 'extras', None)
+            if extras:
+                for o, v in zip(objs, values):
+                    v.update(get_fields(extras, o))
+        else:
+            values = {}
+            for field in getattr(self, 'fields', []):
+                values[field] = getattr(objs, field, None)
+
         return values
