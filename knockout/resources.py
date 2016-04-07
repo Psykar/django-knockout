@@ -20,7 +20,10 @@ def get_fields(fields, obj):
 class Resource(object):
 
     def __init__(self, queryset=None):
-        self.queryset = queryset
+        if queryset is not None:
+            self.queryset = queryset
+        # Copy the class queryset so any cached results are reset.
+        self.queryset = self.queryset.all()
 
     def eval(self):
 
