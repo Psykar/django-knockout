@@ -17,20 +17,28 @@ def get_fields(fields, obj):
         obs_dict[name] = val
     return obs_dict
 
+
 class Resource(object):
+    queryset = None
 
     def __init__(self, queryset=None):
         if queryset is not None:
             self.queryset = queryset
-        # Copy the class queryset so any cached results are reset.
-        self.queryset = self.queryset.all()
+
+        if self.queryset is None:
+            self.queryset = self.model.objects
 
     def eval(self):
+        # Copy the queryset so any cached results are reset.
+        objs = self.queryset.all()
+        fields = getattr(self, 'fields', [])
+        annotations = getattr(self, 'annotations', [])
 
-        # Were we given something?
-        objs = getattr(self, 'queryset', None)
-        if objs is None:
-            objs = self.model.objects.all()
+        for (annotation, method, field) in annotations:
+            objs = objs.annotate(**{
+                annotation: method(field)
+            })
+            fields.append(annotation)
 
         # Is it a queryset, or an object?
         if not isinstance(objs, self.model):
